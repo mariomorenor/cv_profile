@@ -1,5 +1,5 @@
 export const personalInfo = {
-  name: "STAR",
+  name: "Jonathan Moreno",
   location: "Santo Domingo de los Tsáchilas",
   email: "jmoreno@star-software.net",
   github: "https://github.com/loremipsum",
