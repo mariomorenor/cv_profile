@@ -1,0 +1,38 @@
+stages:
+  - build
+  - deploy
+
+# 1️⃣ Build job
+build_job:
+  stage: build
+  image: node:22
+  script:
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+  only:
+    - main
+
+# 2️⃣ Deploy job
+deploy_job:
+  stage: deploy
+  before_script:
+    - 'which ssh-agent || (apk add --no-cache openssh-client rsync)'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -p 22 $DEPLOY_SERVER >> ~/.ssh/known_hosts
+  script:
+    # Carpeta destino en el VPS según perfil
+    - DEST_FOLDER="/var/www/html/profiles/$PROFILE_NAME"
+    # Crear carpeta si no existe
+    - ssh $DEPLOY_USER@$DEPLOY_SERVER "mkdir -p $DEST_FOLDER"
+    # Copiar los archivos dist/ al VPS
+    - rsync -avz dist/ $DEPLOY_USER@$DEPLOY_SERVER:$DEST_FOLDER/
+  dependencies:
+    - build_job
+  only:
+    - main
